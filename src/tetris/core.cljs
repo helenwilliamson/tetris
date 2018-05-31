@@ -49,6 +49,16 @@
       new-state
       (conj current-state piece))))
 
+(defn rotate-piece
+  [state]
+  (let [piece (last state)
+        current-state (vec (take (- (count state) 1) state))
+        new-piece (assoc piece :width (:height piece) :height (:width piece))
+        new-state (conj current-state new-piece)]
+    (if (is-valid-world current-state new-piece)
+      new-state
+      (conj current-state piece))))
+
 (defn select-random
   [data]
   (data (rand-int (count data))))
@@ -80,12 +90,13 @@
       (js/setTimeout #(swap! game add-piece) 50))
     new-state))
 
-(def arrow-keys {37 :left 39 :right 40 :down})
+(def movement-keys {37 :left 39 :right 40 :down})
 (defn handle-keyboard-input
   [event]
   (let [key (.-keyCode event)]
-    (if (contains? arrow-keys key)
-      (swap! game move-piece (arrow-keys key)))))
+    (cond
+     (contains? movement-keys key) (swap! game move-piece (movement-keys key))
+     (= 38 key) (swap! game rotate-piece))))
 
 (defonce gravity (reset! game-updater (js/setInterval #(swap! game update-game) 500)))
 (defonce adder (swap! game add-piece))
