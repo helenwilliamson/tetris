@@ -6,7 +6,7 @@
 (def height 500)
 (def width 500)
 
-(def colours ["red" "blue" "yellow" "green" "pink"])
+(def colours ["red" "lime" "yellow" "aqua" "fuchsia"])
 
 (defonce app-state (atom []))
 
@@ -52,7 +52,7 @@
 
 (defonce gravity (js/setInterval #(swap! app-state drop-pieces) 500))
 
-(defonce adder (reset! adder-interval (js/setInterval #(swap! app-state add-piece), 3000)))
+(defonce adder (reset! adder-interval (js/setInterval #(swap! app-state add-piece), 1000)))
 
 (defn horizontal-rectangle
   [{id :id x :x y :y width :width height :height colour :colour}]
