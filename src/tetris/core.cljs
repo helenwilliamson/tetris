@@ -11,6 +11,7 @@
 
 (defonce game (atom []))
 (defonce status (atom ""))
+(defonce game-updater (atom 0))
 
 (defn overlaps
   [first second]
@@ -58,6 +59,7 @@
     (if (is-valid-world state new-piece)
       (conj state new-piece)
      (do
+       (js/clearInterval @game-updater)
        (reset! status "Game Over")
        state))))
 
@@ -68,7 +70,7 @@
       (js/setTimeout #(swap! game add-piece) 50))
     new-state))
 
-(defonce gravity (js/setInterval #(swap! game update-game) 500))
+(defonce gravity (reset! game-updater (js/setInterval #(swap! game update-game) 500)))
 
 (defn horizontal-rectangle
   [{id :id x :x y :y width :width height :height colour :colour}]
