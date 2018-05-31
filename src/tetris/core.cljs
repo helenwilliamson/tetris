@@ -29,11 +29,19 @@
         pieces-overlap (not= 0 (count (filter #(overlaps new-piece %1) state)))]
     (not (or at-bottom pieces-overlap))))
 
-(defn drop-piece
-  [state]
+(defn apply-direction
+  [piece direction]
+  (cond
+   (= direction :down) (assoc piece :y (+ (:y piece) 25))
+   (= direction :left) (assoc piece :x (- (:x piece) 25))
+   (= direction :right) (assoc piece :x (+ (:x piece) 25))
+   :else piece))
+
+(defn move-piece
+  [state direction]
   (let [piece (last state)
         current-state (vec (take (- (count state) 1) state))
-        new-piece (assoc piece :y (+ 25 (:y piece)))
+        new-piece (apply-direction piece direction)
         new-state (conj current-state new-piece)]
     (if (is-valid-world current-state new-piece)
       new-state
@@ -63,17 +71,19 @@
        (reset! status "Game Over")
        state))))
 
-(defn move-piece
-  [state move]
-  (println "move-piece" move)
-  state)
-
 (defn update-game
   [state]
-  (let [new-state (drop-piece state)]
+  (let [new-state (move-piece state :down)]
     (if (= state new-state)
       (js/setTimeout #(swap! game add-piece) 50))
     new-state))
+
+(def arrow-keys {37 :left 39 :right 40 :down})
+(defn handle-keyboard-input
+  [event]
+  (let [key (.-keyCode event)]
+    (if (contains? arrow-keys key)
+      (swap! game move-piece (arrow-keys key)))))
 
 (defonce gravity (reset! game-updater (js/setInterval #(swap! game update-game) 500)))
 (defonce adder (swap! game add-piece))
@@ -90,14 +100,6 @@
       (horizontal-rectangle piece))]
    [:p
     [:strong @status]]])
-
-(def arrow-keys {37 :left 39 :right 40 :down})
-
-(defn handle-keyboard-input
-  [event]
-  (let [key (.-keyCode event)]
-    (if (contains? arrow-keys key)
-      (swap! game move-piece (arrow-keys key)))))
 
 (reagent/render-component [tetris]
                           (. js/document (getElementById "app")))
