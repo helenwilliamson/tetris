@@ -9,6 +9,7 @@
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia"])
 
 (defonce game (atom []))
+(defonce status (atom ""))
 
 (defn overlaps
   [first second]
@@ -41,13 +42,14 @@
 (defn add-piece
   [state]
   (let [random-colour (colours (rand-int (count colours)))
-        possible-x (vec (range 0 350 25))
+        possible-x (vec (range 0 (- width 100) 25))
         random-x (possible-x (rand-int (count possible-x)))
         new-piece {:id (count state) :x random-x :y 0 :height 25 :width 100 :colour random-colour}]
     (if (is-valid-world state new-piece)
       (conj state new-piece)
      (do
        (js/clearInterval @adder-interval)
+       (reset! status "Game Over")
        state))))
 
 (defonce gravity (js/setInterval #(swap! game drop-pieces) 500))
@@ -63,7 +65,9 @@
    [:h3 "Tetris"]
    [:svg {:width width :height height :style {:border "1px solid"}}
     (for [piece @game]
-      (horizontal-rectangle piece))]])
+      (horizontal-rectangle piece))]
+   [:p {:style { :padding-left (- (/ width 2) 50)}}
+    [:strong @status]]])
 
 (reagent/render-component [tetris]
                           (. js/document (getElementById "app")))
