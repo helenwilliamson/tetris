@@ -1,5 +1,6 @@
 (ns tetris.core
-    (:require [reagent.core :as reagent :refer [atom]]))
+    (:require [reagent.core :as reagent :refer [atom]]
+              [clojure.string :as str]))
 
 (enable-console-print!)
 
@@ -63,6 +64,11 @@
        (reset! status "Game Over")
        state))))
 
+(defn move-piece
+  [state move]
+  (println "move-piece" move)
+  state)
+
 (defn update-game
   [state]
   (let [new-state (drop-piece state)]
@@ -85,10 +91,19 @@
    [:p
     [:strong @status]]])
 
+(def arrow-keys {37 :left 39 :right 40 :down})
+
+(defn handle-keyboard-input
+  [event]
+  (let [key (.-keyCode event)]
+    (if (contains? arrow-keys key)
+      (swap! game move-piece (arrow-keys key)))))
+
 (reagent/render-component [tetris]
                           (. js/document (getElementById "app")))
 (swap! game drop-piece)
 (swap! game add-piece)
+(js/document.addEventListener "keydown" handle-keyboard-input)
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
