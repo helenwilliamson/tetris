@@ -25,9 +25,11 @@
 
 (defn is-valid-world
   [state new-piece]
-  (let [at-bottom (< height (+ (:height new-piece) (:y new-piece)))
+  (let [at-bottom-edge (< height (+ (:height new-piece) (:y new-piece)))
+        at-left-edge (< (:x new-piece) 0)
+        at-right-edge (> (+ (:width new-piece) (:x new-piece)) width)
         pieces-overlap (not= 0 (count (filter #(overlaps new-piece %1) state)))]
-    (not (or at-bottom pieces-overlap))))
+    (not (or at-bottom-edge at-left-edge at-right-edge pieces-overlap))))
 
 (defn apply-direction
   [piece direction]
