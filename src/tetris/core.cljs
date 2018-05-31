@@ -8,7 +8,7 @@
 
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia"])
 
-(defonce app-state (atom []))
+(defonce game (atom []))
 
 (defn overlaps
   [first second]
@@ -50,9 +50,9 @@
        (js/clearInterval @adder-interval)
        state))))
 
-(defonce gravity (js/setInterval #(swap! app-state drop-pieces) 500))
+(defonce gravity (js/setInterval #(swap! game drop-pieces) 500))
 
-(defonce adder (reset! adder-interval (js/setInterval #(swap! app-state add-piece), 1000)))
+(defonce adder (reset! adder-interval (js/setInterval #(swap! game add-piece), 1000)))
 
 (defn horizontal-rectangle
   [{id :id x :x y :y width :width height :height colour :colour}]
@@ -62,12 +62,13 @@
   [:div
    [:h3 "Tetris"]
    [:svg {:width width :height height :style {:border "1px solid"}}
-    (for [piece @app-state]
+    (for [piece @game]
       (horizontal-rectangle piece))]])
 
 (reagent/render-component [tetris]
                           (. js/document (getElementById "app")))
-(swap! app-state drop-pieces)
+(swap! game drop-pieces)
+(swap! game add-piece)
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
