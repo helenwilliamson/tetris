@@ -3,26 +3,33 @@
 
 (enable-console-print!)
 
-(println "This text is printed from src/tetris/core.cljs. Go ahead and edit it and see reloading in action.")
+(def height 200)
 
-;; define your app data so that it doesn't get over-written on reload
-
-(defonce app-state (atom [{:id 1 :x 100 :y 0 :height 20 :width 100}
+(defonce app-state (atom [{:id 3 :x 20 :y 100 :height 20 :width 100}
                           {:id 2 :x 0 :y 40 :height 20 :width 100}
-                          {:id 3 :x 20 :y 100 :height 20 :width 100}]))
+                          {:id 1 :x 100 :y 0 :height 20 :width 100}]))
 
 (defn add-gravity 
   [state] 
   (map #(assoc % :y (+ 5 (:y %))) state))
 
+(defn overlaps
+  [first second]
+  (let [first-bottom-right (hash-map :x (+ (:width first) (:x first)) :y (+ (:height first) (:y first)))
+        second-bottom-right (hash-map :x (+ (:width second) (:x second)) :y (+ (:height second) (:y second)))]
+    (not (or (>= (:x first) (:x second-bottom-right)) 
+             (>= (:x second) (:x first-bottom-right))
+             (>= (:y first) (:y second-bottom-right))
+             (>= (:y second) (:y first-bottom-right))))))
+
 (defn is-valid-world
   [state new-piece]
-  (let [at-bottom (< 500 (+ (:height new-piece) (:y new-piece)))]
-    (not at-bottom)))
+  (let [at-bottom (< height (+ (:height new-piece) (:y new-piece)))
+        pieces-overlap (not= 0 (count (filter #(overlaps new-piece %1) state)))]
+    (not (or at-bottom pieces-overlap))))
 
 (defn drop-pieces 
   [state]
-  ;(println state)
   (reduce (fn 
             [current-state piece]
             ;(println "piece" piece)
@@ -35,7 +42,7 @@
                 (conj current-state piece))))
           [] state))
 
-(defonce gravity (js/setInterval #(swap! app-state drop-pieces) 50))
+(defonce gravity (js/setInterval #(swap! app-state drop-pieces) 300))
 
 (defn horizontal-rectangle
   [{id :id x :x y :y width :width height :height}]
@@ -44,7 +51,7 @@
 (defn hello-world []
   [:div
    [:h3 "Tetris"]
-   [:svg {:width 200 :height 500}
+   [:svg {:width 200 :height height}
     (for [piece @app-state]
       (horizontal-rectangle piece))]])
 
