@@ -3,11 +3,12 @@
 
 (enable-console-print!)
 
-(def height 200)
+(def height 500)
+(def width 500)
 
-(defonce app-state (atom [{:id 1 :x 20 :y 100 :height 20 :width 100 :colour "red"}
-                          {:id 2 :x 0 :y 40 :height 20 :width 100 :colour "blue"}
-                          {:id 3 :x 100 :y 0 :height 20 :width 100 :colour "green"}]))
+(def colours ["red" "blue" "yellow" "green" "pink"])
+
+(defonce app-state (atom []))
 
 (defn overlaps
   [first second]
@@ -28,7 +29,7 @@
   [state]
   (reduce (fn 
             [current-state piece]
-            (let [new-piece (assoc piece :y (+ 5 (:y piece)))
+            (let [new-piece (assoc piece :y (+ 25 (:y piece)))
                   new-state (conj current-state new-piece)]
               (if (is-valid-world current-state new-piece)
                 new-state
@@ -39,7 +40,10 @@
 
 (defn add-piece
   [state]
-  (let [new-piece {:id (count state) :x 50 :y 0 :height 20 :width 100 :colour "red"}]
+  (let [random-colour (colours (rand-int (count colours)))
+        possible-x (vec (range 0 350 25))
+        random-x (possible-x (rand-int (count possible-x)))
+        new-piece {:id (count state) :x random-x :y 0 :height 25 :width 100 :colour random-colour}]
     (if (is-valid-world state new-piece)
       (conj state new-piece)
      (do
@@ -48,16 +52,16 @@
 
 (defonce gravity (js/setInterval #(swap! app-state drop-pieces) 500))
 
-(defonce adder (reset! adder-interval (js/setInterval #(swap! app-state add-piece), 5000)))
+(defonce adder (reset! adder-interval (js/setInterval #(swap! app-state add-piece), 3000)))
 
 (defn horizontal-rectangle
   [{id :id x :x y :y width :width height :height colour :colour}]
-  [:rect {:width width :height height :x x :y y :key id :fill colour}])
+  [:rect {:width width :height height :x x :y y :key id :fill colour :stroke "black" :stroke-width 1}])
 
 (defn tetris []
   [:div
    [:h3 "Tetris"]
-   [:svg {:width 200 :height height :style {:background "black" :border "1px solid"}}
+   [:svg {:width width :height height :style {:border "1px solid"}}
     (for [piece @app-state]
       (horizontal-rectangle piece))]])
 
