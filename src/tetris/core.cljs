@@ -16,7 +16,7 @@
   [first second]
   (let [first-bottom-right (hash-map :x (+ (:width first) (:x first)) :y (+ (:height first) (:y first)))
         second-bottom-right (hash-map :x (+ (:width second) (:x second)) :y (+ (:height second) (:y second)))]
-    (not (or (>= (:x first) (:x second-bottom-right)) 
+    (not (or (>= (:x first) (:x second-bottom-right))
              (>= (:x second) (:x first-bottom-right))
              (>= (:y first) (:y second-bottom-right))
              (>= (:y second) (:y first-bottom-right))))))
@@ -27,9 +27,9 @@
         pieces-overlap (not= 0 (count (filter #(overlaps new-piece %1) state)))]
     (not (or at-bottom pieces-overlap))))
 
-(defn drop-pieces 
+(defn drop-piece
   [state]
-  (reduce (fn 
+  (reduce (fn
             [current-state piece]
             (let [new-piece (assoc piece :y (+ 25 (:y piece)))
                   new-state (conj current-state new-piece)]
@@ -37,8 +37,6 @@
                 new-state
                 (conj current-state piece))))
           [] state))
-
-(defonce adder-interval (atom 0))
 
 (defn select-random
   [data]
@@ -60,13 +58,17 @@
     (if (is-valid-world state new-piece)
       (conj state new-piece)
      (do
-       (js/clearInterval @adder-interval)
        (reset! status "Game Over")
        state))))
 
-(defonce gravity (js/setInterval #(swap! game drop-pieces) 500))
+(defn update-game
+  [state]
+  (let [new-state (drop-piece state)]
+    (if (= state new-state)
+      (js/setTimeout #(swap! game add-piece) 50))
+    new-state))
 
-(defonce adder (reset! adder-interval (js/setInterval #(swap! game add-piece), 1000)))
+(defonce gravity (js/setInterval #(swap! game update-game) 500))
 
 (defn horizontal-rectangle
   [{id :id x :x y :y width :width height :height colour :colour}]
@@ -78,12 +80,12 @@
    [:svg {:width width :height height :style {:border "1px solid"}}
     (for [piece @game]
       (horizontal-rectangle piece))]
-   [:p {:style { :padding-left (- (/ width 2) 50)}}
+   [:p
     [:strong @status]]])
 
 (reagent/render-component [tetris]
                           (. js/document (getElementById "app")))
-(swap! game drop-pieces)
+(swap! game drop-piece)
 (swap! game add-piece)
 
 (defn on-js-reload []
