@@ -7,6 +7,7 @@
 (def width 500)
 
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia"])
+(def piece-type [:rectangle :square])
 
 (defonce game (atom []))
 (defonce status (atom ""))
@@ -43,12 +44,19 @@
   [data]
   (data (rand-int (count data))))
 
+(defn make-piece
+  [id x colour piece-type]
+  (cond
+   (= piece-type :rectangle) {:id id :x x :y 0 :height 25 :width 100 :colour colour}
+   (= piece-type :square) {:id id :x x :y 0 :height 50 :width 50 :colour colour}))
+
 (defn add-piece
   [state]
   (let [random-colour (select-random colours)
+        random-piece-type (select-random piece-type)
         possible-x (vec (range 0 (- width 100) 25))
         random-x (select-random possible-x)
-        new-piece {:id (count state) :x random-x :y 0 :height 25 :width 100 :colour random-colour}]
+        new-piece (make-piece (count state) random-x random-colour random-piece-type)]
     (if (is-valid-world state new-piece)
       (conj state new-piece)
      (do
