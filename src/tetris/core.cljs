@@ -31,14 +31,13 @@
 
 (defn drop-piece
   [state]
-  (reduce (fn
-            [current-state piece]
-            (let [new-piece (assoc piece :y (+ 25 (:y piece)))
-                  new-state (conj current-state new-piece)]
-              (if (is-valid-world current-state new-piece)
-                new-state
-                (conj current-state piece))))
-          [] state))
+  (let [piece (last state)
+        current-state (vec (take (- (count state) 1) state))
+        new-piece (assoc piece :y (+ 25 (:y piece)))
+        new-state (conj current-state new-piece)]
+    (if (is-valid-world current-state new-piece)
+      new-state
+      (conj current-state piece))))
 
 (defn select-random
   [data]
@@ -77,6 +76,7 @@
     new-state))
 
 (defonce gravity (reset! game-updater (js/setInterval #(swap! game update-game) 500)))
+(defonce adder (swap! game add-piece))
 
 (defn horizontal-rectangle
   [{id :id x :x y :y width :width height :height colour :colour}]
@@ -101,8 +101,7 @@
 
 (reagent/render-component [tetris]
                           (. js/document (getElementById "app")))
-(swap! game drop-piece)
-(swap! game add-piece)
+
 (js/document.addEventListener "keydown" handle-keyboard-input)
 
 (defn on-js-reload []
