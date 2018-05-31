@@ -39,11 +39,15 @@
 
 (defonce adder-interval (atom 0))
 
+(defn select-random
+  [data]
+  (data (rand-int (count data))))
+
 (defn add-piece
   [state]
-  (let [random-colour (colours (rand-int (count colours)))
+  (let [random-colour (select-random colours)
         possible-x (vec (range 0 (- width 100) 25))
-        random-x (possible-x (rand-int (count possible-x)))
+        random-x (select-random possible-x)
         new-piece {:id (count state) :x random-x :y 0 :height 25 :width 100 :colour random-colour}]
     (if (is-valid-world state new-piece)
       (conj state new-piece)
