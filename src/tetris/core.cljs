@@ -8,8 +8,8 @@
 (def width 200)
 
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia" "blue"])
-;(def piece-type [:rectangle :square :zig-zag-left :zig-zag-right :t])
-(def piece-type [:t])
+(def piece-type [:rectangle :square :zig-zag-left :zig-zag-right :t-shape :l-shape])
+;(def piece-type [:l-shape])
 
 (defonce game (atom []))
 (defonce status (atom ""))
@@ -57,11 +57,16 @@
    :zig-zag-right
    [[{:x 50 :y 25} {:x 25 :y 0} {:x 0 :y 25} {:x -25 :y 0}]
     [{:x -50 :y -25} {:x -25 :y 0} {:x 0 :y -25} {:x 25 :y 0}]]
-   :t
+   :t-shape
    [[{:x 25 :y -25} {:x 0 :y 0} {:x -25 :y 25} {:x -25 :y -25}]
     [{:x 25 :y 25} {:x 0 :y 0} {:x -25 :y -25} {:x 25 :y -25}]
     [{:x -25 :y 25} {:x 0 :y 0} {:x 25 :y -25} {:x 25 :y 25}]
     [{:x -25 :y -25} {:x 0 :y 0} {:x 25 :y 25} {:x -25 :y 25}]]
+   :l-shape
+   [[{:x 50 :y 25} {:x 25 :y 0} {:x 0 :y -25} {:x -25 :y 0}]
+    [{:x -25 :y 25} {:x 0 :y 0} {:x 25 :y -25} {:x 0 :y -50}]
+    [{:x -25 :y -25} {:x 0 :y 0} {:x 25 :y 25} {:x 50 :y 0}]
+    [{:x 0 :y -50} {:x -25 :y -25} {:x -50 :y 0} {:x -25 :y 25}]]
    })
 
 (defn apply-rotation
@@ -95,7 +100,8 @@
    (= piece-type :square) {:type :square :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x x :y 25} {:id (+ 3 id) :x (+ 25 x) :y 25}]}
    (= piece-type :zig-zag-left) {:type :zig-zag-left :colour colour :blocks [{:id id :x x :y 50} {:id (+ 1 id) :x x :y 25} {:id (+ 2 id) :x (+ 25 x) :y 25} {:id (+ 3 id) :x (+ 25 x) :y 0}]}
    (= piece-type :zig-zag-right) {:type :zig-zag-right :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x x :y 25} {:id (+ 2 id) :x (+ 25 x) :y 25} {:id (+ 3 id) :x (+ 25 x) :y 50}]}
-   (= piece-type :t) {:type :t :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 25 x) :y 25}]}
+   (= piece-type :t-shape) {:type :t-shape :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 25 x) :y 25}]}
+   (= piece-type :l-shape) {:type :l-shape :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x x :y 25} {:id (+ 2 id) :x x :y 50} {:id (+ 3 id) :x (+ 25 x) :y 50}]}
    :else {}))
 
 (defn add-piece
