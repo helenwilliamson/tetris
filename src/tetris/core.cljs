@@ -8,7 +8,7 @@
 (def width 200)
 
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia" "blue"])
-(def piece-type [:rectangle :square])
+(def piece-type [:rectangle :square :zig-zag-left :zig-zag-right])
 
 (defonce game (atom []))
 (defonce status (atom ""))
@@ -73,8 +73,12 @@
 (defn make-piece
   [id x colour piece-type]
   (cond
-   (= piece-type :rectangle) {:x x :y 0 :type :rectangle :rotated false :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 75 x) :y 0}]}
-   (= piece-type :square) {:x x :y 0 :type :square :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x x :y 25} {:id (+ 3 id) :x (+ 25 x) :y 25}]}))
+   (= piece-type :rectangle) {:type :rectangle :rotated false :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 75 x) :y 0}]}
+   (= piece-type :square) {:type :square :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x x :y 25} {:id (+ 3 id) :x (+ 25 x) :y 25}]}
+   (= piece-type :zig-zag-left) {:type :zig-zag-left :colour colour :blocks [{:id id :x x :y 50} {:id (+ 1 id) :x x :y 25} {:id (+ 2 id) :x (+ 25 x) :y 25} {:id (+ 3 id) :x (+ 25 x) :y 0}]}
+   (= piece-type :zig-zag-right) {:type :zig-zag-right :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x x :y 25} {:id (+ 2 id) :x (+ 25 x) :y 25} {:id (+ 3 id) :x (+ 25 x) :y 50}]}
+   ;(= piece-type :t) {:type :t :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 25 x) :y 25}]}
+   :else {}))
 
 (defn add-piece
   [state]
