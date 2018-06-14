@@ -14,24 +14,16 @@
 (defonce status (atom ""))
 (defonce game-updater (atom 0))
 
-(defn update-values
-  [m f & args]
-  (reduce (fn [r [k v]] (assoc r k (apply f v args))) {} m))
-
 (defn overlaps
   [{first-blocks :blocks} {second-blocks :blocks}]
-
-  (let [first-values (set (vals first-blocks))
-        second-values (set (vals second-blocks))]
-    (println "first values" first-values)
-    (println "second values" second-values)
-    (some #(contains? second-values %1) first-values)))
+  (let [contains-block (fn [blocks {x :x y :y}] (not= 0 (count (filter #(and (== x (:x %1)) (== y (:y %1))) blocks))))]
+    (some #(contains-block second-blocks %1) first-blocks)))
 
 (defn is-valid-world
   [state new-piece]
-  (let [at-bottom-edge (some #(< height (+ 25 (:y %1))) (vals (:blocks new-piece)))
-        at-left-edge (some #(< (:x %1) 0) (vals (:blocks new-piece)))
-        at-right-edge (some #(> (+ 25 (:x %1)) width) (vals (:blocks new-piece)))
+  (let [at-bottom-edge (some #(< height (+ 25 (:y %1))) (:blocks new-piece))
+        at-left-edge (some #(< (:x %1) 0) (:blocks new-piece))
+        at-right-edge (some #(> (+ 25 (:x %1)) width) (:blocks new-piece))
         pieces-overlap (not= 0 (count (filter #(overlaps new-piece %1) state)))]
     (not (or at-bottom-edge at-left-edge at-right-edge pieces-overlap))))
 
@@ -39,9 +31,9 @@
   [piece direction]
   (let [blocks (:blocks piece)]
     (cond
-     (= direction :down) (assoc piece :blocks (update-values blocks (fn [coord] (assoc coord :y (+ (:y coord) 25)))))
-     (= direction :left) (assoc piece :blocks (update-values blocks (fn [coord] (assoc coord :x (- (:x coord) 25)))))
-     (= direction :right) (assoc piece :blocks (update-values blocks (fn [coord] (assoc coord :x (+ (:x coord) 25)))))
+     (= direction :down) (assoc piece :blocks (map #(assoc %1 :y (+ (:y %1) 25)) blocks))
+     (= direction :left) (assoc piece :blocks (map #(assoc %1 :x (- (:x %1) 25)) blocks))
+     (= direction :right) (assoc piece :blocks (map #(assoc %1 :x (+ (:x %1) 25)) blocks))
      :else piece)))
 
 (defn move-piece
@@ -71,8 +63,8 @@
 (defn make-piece
   [id x colour piece-type]
   (cond
-   (= piece-type :rectangle) {:x x :y 0 :height 25 :width 100 :colour colour :blocks {id {:x x :y 0} (+ 1 id) {:x (+ 25 x) :y 0} (+ 2 id) {:x (+ 50 x) :y 0} (+ 3 id) {:x (+ 75 x) :y 0}}}
-   (= piece-type :square) {:x x :y 0 :height 50 :width 50 :colour colour :blocks {id {:x x :y 0} (+ 1 id) {:x (+ 25 x) :y 0} (+ 2 id) {:x x :y 25} (+ 3 id) {:x (+ 25 x) :y 25}}}))
+   (= piece-type :rectangle) {:x x :y 0 :height 25 :width 100 :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 75 x) :y 0}]}
+   (= piece-type :square) {:x x :y 0 :height 50 :width 50 :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x x :y 25} {:id (+ 3 id) :x (+ 25 x) :y 25}]}))
 
 (defn add-piece
   [state]
@@ -107,10 +99,8 @@
 (defonce adder (swap! game add-piece))
 
 (defn rectangle
-  [block colour]
-  (let [id (first block)
-        {x :x y :y} (nth block 1)]
-    [:rect {:width 25 :height 25 :x x :y y :key id :fill colour :stroke "black" :stroke-width 1}]))
+  [{id :id x :x y :y} colour]
+  [:rect {:width 25 :height 25 :x x :y y :key id :fill colour :stroke "black" :stroke-width 1}])
 
 (defn tetris []
   [:div
