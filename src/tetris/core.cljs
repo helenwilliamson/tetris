@@ -46,20 +46,21 @@
       new-state
       (conj current-state piece))))
 
-(defn rotate-rectangle
+(defn rotations
   [piece]
-  (let [transforms (if (:rotated piece)
+  (cond
+   (= (:type piece) :rectangle) (if (:rotated piece)
                      [{:x -25 :y 25} {:x 0 :y 0} {:x 25 :y -25} {:x 50 :y 50}]
-                     [{:x 25 :y -25} {:x 0 :y 0} {:x -25 :y 25} {:x -50 :y -50}])]
-    (assoc piece :rotated (not (:rotated piece)) :blocks (map #(apply merge-with + %1) (partition 2 (interleave (:blocks piece) transforms))))))
+                     [{:x 25 :y -25} {:x 0 :y 0} {:x -25 :y 25} {:x -50 :y -50}])
+   :else [{:x 0 :y 0} {:x 0 :y 0} {:x 0 :y 0} {:x 0 :y 0}]
+  ))
 
 (defn rotate-piece
   [state]
   (let [piece (last state)
         current-state (vec (take (- (count state) 1) state))
-        new-piece (cond
-                   (= (:type piece) :rectangle) (rotate-rectangle piece)
-                   :else piece)
+        rotations-to-apply (rotations piece)
+        new-piece (assoc piece :rotated (not (:rotated piece)) :blocks (map #(apply merge-with + %1) (partition 2 (interleave (:blocks piece) rotations-to-apply))))
         new-state (conj current-state new-piece)]
     (if (is-valid-world current-state new-piece)
       new-state
