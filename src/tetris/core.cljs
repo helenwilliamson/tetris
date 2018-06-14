@@ -1,6 +1,7 @@
 (ns tetris.core
     (:require [reagent.core :as reagent :refer [atom]]
-              [clojure.string :as str]))
+              [clojure.string :as str]
+              [clojure.set :as sets]))
 
 (enable-console-print!)
 
@@ -9,7 +10,6 @@
 
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia" "blue"])
 (def piece-type [:rectangle :square :zig-zag-left :zig-zag-right :t-shape :l-shape])
-;(def piece-type [:l-shape])
 
 (defonce game (atom []))
 (defonce status (atom ""))
@@ -37,10 +37,25 @@
      (= direction :right) (assoc piece :blocks (map #(assoc %1 :x (+ (:x %1) 25)) blocks))
      :else piece)))
 
+(defn row-complete?
+  [state]
+  (let [xs (set (range 0 width 25))
+        blocks (flatten (map :blocks state))]
+    (not-empty (filterv (fn [[k v]] (empty? (sets/difference xs (set (map :x v))))) (group-by :y blocks)))))
+
+(defn clear-complete-row
+  [state]
+  (let [xs (set (range 0 width 25))
+        blocks (flatten (map :blocks state))
+        ys-to-remove (set (keys (filter (fn [[k v]] (empty? (sets/difference xs (set (map :x v))))) (group-by :y blocks))))
+        updated (mapv (fn [piece] (assoc piece :blocks (filter #(not (contains? ys-to-remove (:y %1))) (:blocks piece)))) state)]
+    updated))
+
 (defn move-piece
   [state direction]
   (let [piece (last state)
-        current-state (vec (take (- (count state) 1) state))
+        current (vec (take (- (count state) 1) state))
+        current-state (if (row-complete? current) (clear-complete-row current) current)
         new-piece (apply-direction piece direction)
         new-state (conj current-state new-piece)]
     (if (is-valid-world current-state new-piece)
