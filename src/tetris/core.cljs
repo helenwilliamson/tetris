@@ -9,6 +9,7 @@
 
 (def colours ["red" "lime" "yellow" "aqua" "fuchsia" "blue"])
 (def piece-type [:rectangle :square :zig-zag-left :zig-zag-right])
+;(def piece-type [:zig-zag-left :zig-zag-right])
 
 (defonce game (atom []))
 (defonce status (atom ""))
@@ -46,21 +47,33 @@
       new-state
       (conj current-state piece))))
 
-(defn rotations
+(def rotations-by-piece
+  {:rectangle
+   [[{:x 25 :y -25} {:x 0 :y 0} {:x -25 :y 25} {:x -50 :y -50}]
+    [{:x -25 :y 25} {:x 0 :y 0} {:x 25 :y -25} {:x 50 :y 50}]]
+   :zig-zag-left
+   [[{:x 0 :y -25} {:x 25 :y 0} {:x 0 :y 25} {:x 25 :y 50}]
+    [{:x 0 :y 25} {:x -25 :y 0} {:x 0 :y -25} {:x -25 :y -50}]]
+   :zig-zag-right
+   [[{:x 50 :y 25} {:x 25 :y 0} {:x 0 :y 25} {:x -25 :y 0}]
+    [{:x -50 :y -25} {:x -25 :y 0} {:x 0 :y -25} {:x 25 :y 0}]]
+   })
+
+(defn apply-rotation
   [piece]
-  (cond
-   (= (:type piece) :rectangle) (if (:rotated piece)
-                     [{:x -25 :y 25} {:x 0 :y 0} {:x 25 :y -25} {:x 50 :y 50}]
-                     [{:x 25 :y -25} {:x 0 :y 0} {:x -25 :y 25} {:x -50 :y -50}])
-   :else [{:x 0 :y 0} {:x 0 :y 0} {:x 0 :y 0} {:x 0 :y 0}]
-  ))
+  (let [default [[{:x 0 :y 0} {:x 0 :y 0} {:x 0 :y 0} {:x 0 :y 0}]]
+        rotation-index (get piece :rotated 0)
+        rotation (get rotations-by-piece (:type piece) default)
+        current-rotation (nth rotation rotation-index)
+        new-rotation-index (rem (inc rotation-index) (count rotation))
+        rotated-blocks (map #(apply merge-with + %1) (partition 2 (interleave (:blocks piece) current-rotation)))]
+    (assoc piece :rotated new-rotation-index :blocks rotated-blocks)))
 
 (defn rotate-piece
   [state]
   (let [piece (last state)
         current-state (vec (take (- (count state) 1) state))
-        rotations-to-apply (rotations piece)
-        new-piece (assoc piece :rotated (not (:rotated piece)) :blocks (map #(apply merge-with + %1) (partition 2 (interleave (:blocks piece) rotations-to-apply))))
+        new-piece (apply-rotation piece)
         new-state (conj current-state new-piece)]
     (if (is-valid-world current-state new-piece)
       new-state
@@ -73,7 +86,7 @@
 (defn make-piece
   [id x colour piece-type]
   (cond
-   (= piece-type :rectangle) {:type :rectangle :rotated false :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 75 x) :y 0}]}
+   (= piece-type :rectangle) {:type :rectangle :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 75 x) :y 0}]}
    (= piece-type :square) {:type :square :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x x :y 25} {:id (+ 3 id) :x (+ 25 x) :y 25}]}
    (= piece-type :zig-zag-left) {:type :zig-zag-left :colour colour :blocks [{:id id :x x :y 50} {:id (+ 1 id) :x x :y 25} {:id (+ 2 id) :x (+ 25 x) :y 25} {:id (+ 3 id) :x (+ 25 x) :y 0}]}
    (= piece-type :zig-zag-right) {:type :zig-zag-right :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x x :y 25} {:id (+ 2 id) :x (+ 25 x) :y 25} {:id (+ 3 id) :x (+ 25 x) :y 50}]}
