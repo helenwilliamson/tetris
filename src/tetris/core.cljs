@@ -45,11 +45,20 @@
 
 (defn clear-complete-row
   [state]
+  (println state)
   (let [xs (set (range 0 width 25))
         blocks (flatten (map :blocks state))
         ys-to-remove (set (keys (filter (fn [[k v]] (empty? (sets/difference xs (set (map :x v))))) (group-by :y blocks))))
-        updated (mapv (fn [piece] (assoc piece :blocks (filter #(not (contains? ys-to-remove (:y %1))) (:blocks piece)))) state)]
+        updated (mapv (fn [piece] (->> (:blocks piece)
+                                       (filter #(not (contains? ys-to-remove (:y %1))))
+                                       (map #(assoc %1 :y (+ (:y %1) (* 25 (count (filter (fn [y] (< (:y %1) y)) ys-to-remove))))))
+                                       (assoc piece :blocks))) state)]
+    (println ys-to-remove updated)
     updated))
+
+(defn update-piece
+  [piece]
+  )
 
 (defn move-piece
   [state direction]
