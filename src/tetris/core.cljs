@@ -46,11 +46,20 @@
       new-state
       (conj current-state piece))))
 
+(defn rotate-rectangle
+  [piece]
+  (let [transforms (if (:rotated piece)
+                     [{:x -25 :y 25} {:x 0 :y 0} {:x 25 :y -25} {:x 50 :y 50}]
+                     [{:x 25 :y -25} {:x 0 :y 0} {:x -25 :y 25} {:x -50 :y -50}])]
+    (assoc piece :rotated (not (:rotated piece)) :blocks (map #(apply merge-with + %1) (partition 2 (interleave (:blocks piece) transforms))))))
+
 (defn rotate-piece
   [state]
   (let [piece (last state)
         current-state (vec (take (- (count state) 1) state))
-        new-piece (assoc piece :width (:height piece) :height (:width piece))
+        new-piece (cond
+                   (= (:type piece) :rectangle) (rotate-rectangle piece)
+                   :else piece)
         new-state (conj current-state new-piece)]
     (if (is-valid-world current-state new-piece)
       new-state
@@ -63,8 +72,8 @@
 (defn make-piece
   [id x colour piece-type]
   (cond
-   (= piece-type :rectangle) {:x x :y 0 :height 25 :width 100 :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 75 x) :y 0}]}
-   (= piece-type :square) {:x x :y 0 :height 50 :width 50 :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x x :y 25} {:id (+ 3 id) :x (+ 25 x) :y 25}]}))
+   (= piece-type :rectangle) {:x x :y 0 :type :rectangle :rotated false :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x (+ 50 x) :y 0} {:id (+ 3 id) :x (+ 75 x) :y 0}]}
+   (= piece-type :square) {:x x :y 0 :type :square :colour colour :blocks [{:id id :x x :y 0} {:id (+ 1 id) :x (+ 25 x) :y 0} {:id (+ 2 id) :x x :y 25} {:id (+ 3 id) :x (+ 25 x) :y 25}]}))
 
 (defn add-piece
   [state]
